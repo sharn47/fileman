@@ -1,25 +1,26 @@
 import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
-import colors from "colors";
 import path from "path";
-
-import noteRoutes from "./routes/noteRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+import cors from 'cors'
+const bodyParser = require('body-parser');
+
+const fileRoutes = require('./routes/file-upload-routes');
 
 dotenv.config();
 
 connectDB();
 
-const app = express(); // main thing
+const app = express(); 
 
-app.use(express.json()); // to accept json data
+app.use(express.json()); 
 
 app.use("/api/notes", noteRoutes);
 app.use("/api/users", userRoutes);
 
-// --------------------------deployment------------------------------
+
 const __dirname = path.resolve();
 
 if (process.env.NODE_ENV === "production") {
@@ -33,11 +34,22 @@ if (process.env.NODE_ENV === "production") {
     res.send("API is running..");
   });
 }
-// --------------------------deployment------------------------------
 
-// Error Handling middlewares
+
 app.use(notFound);
 app.use(errorHandler);
+
+app.use(cors());
+
+require('./database')();
+
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.use('/api', fileRoutes.routes);
+
+
+
 
 const PORT = process.env.PORT || 5000;
 
@@ -48,3 +60,4 @@ app.listen(
       .bold
   )
 );
+
